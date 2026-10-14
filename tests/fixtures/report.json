@@ -625,9 +625,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/1"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/1"],
       "status": "inspected",
       "timestamp": "2025-02-01T00:00:00.000Z",
       "verification": "public-api",
@@ -802,9 +800,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/2"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/2"],
       "status": "inspected",
       "timestamp": "2025-02-08T00:00:00.000Z",
       "verification": "public-api",
@@ -941,9 +937,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/3"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/3"],
       "status": "inspected",
       "timestamp": "2025-02-15T00:00:00.000Z",
       "verification": "public-api",
@@ -1118,9 +1112,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/4"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/4"],
       "status": "inspected",
       "timestamp": "2025-02-22T00:00:00.000Z",
       "verification": "public-api",
@@ -1257,9 +1249,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/5"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/5"],
       "status": "inspected",
       "timestamp": "2025-03-01T00:00:00.000Z",
       "verification": "public-api",
@@ -1434,9 +1424,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/6"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/6"],
       "status": "inspected",
       "timestamp": "2025-03-08T00:00:00.000Z",
       "verification": "public-api",
@@ -1573,9 +1561,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/7"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/7"],
       "status": "inspected",
       "timestamp": "2025-03-15T00:00:00.000Z",
       "verification": "public-api",
@@ -1750,9 +1736,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/8"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/8"],
       "status": "inspected",
       "timestamp": "2025-03-22T00:00:00.000Z",
       "verification": "public-api",
@@ -1889,9 +1873,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/9"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/9"],
       "status": "inspected",
       "timestamp": "2025-03-29T00:00:00.000Z",
       "verification": "public-api",
@@ -2066,9 +2048,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/10"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/10"],
       "status": "inspected",
       "timestamp": "2025-04-05T00:00:00.000Z",
       "verification": "public-api",
@@ -2205,9 +2185,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/11"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/11"],
       "status": "inspected",
       "timestamp": "2025-04-12T00:00:00.000Z",
       "verification": "public-api",
@@ -2382,9 +2360,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/12"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/12"],
       "status": "inspected",
       "timestamp": "2025-04-19T00:00:00.000Z",
       "verification": "public-api",
@@ -2521,9 +2497,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/13"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/13"],
       "status": "inspected",
       "timestamp": "2025-04-26T00:00:00.000Z",
       "verification": "public-api",
@@ -2698,9 +2672,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/14"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/14"],
       "status": "inspected",
       "timestamp": "2025-05-03T00:00:00.000Z",
       "verification": "public-api",
@@ -2837,9 +2809,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/15"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/15"],
       "status": "inspected",
       "timestamp": "2025-05-10T00:00:00.000Z",
       "verification": "public-api",
@@ -3014,9 +2984,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/16"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/16"],
       "status": "inspected",
       "timestamp": "2025-05-17T00:00:00.000Z",
       "verification": "public-api",
@@ -3153,9 +3121,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/17"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/17"],
       "status": "inspected",
       "timestamp": "2025-05-24T00:00:00.000Z",
       "verification": "public-api",
@@ -3330,9 +3296,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/18"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/18"],
       "status": "inspected",
       "timestamp": "2025-05-31T00:00:00.000Z",
       "verification": "public-api",
@@ -3469,9 +3433,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/19"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/19"],
       "status": "inspected",
       "timestamp": "2025-06-07T00:00:00.000Z",
       "verification": "public-api",
@@ -3646,9 +3608,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/20"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/20"],
       "status": "inspected",
       "timestamp": "2025-06-14T00:00:00.000Z",
       "verification": "public-api",
@@ -3785,9 +3745,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/21"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/21"],
       "status": "inspected",
       "timestamp": "2025-06-21T00:00:00.000Z",
       "verification": "public-api",
@@ -3962,9 +3920,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/22"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/22"],
       "status": "inspected",
       "timestamp": "2025-06-28T00:00:00.000Z",
       "verification": "public-api",
@@ -4101,9 +4057,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/23"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/23"],
       "status": "inspected",
       "timestamp": "2025-07-05T00:00:00.000Z",
       "verification": "public-api",
@@ -4278,9 +4232,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/24"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/24"],
       "status": "inspected",
       "timestamp": "2025-07-12T00:00:00.000Z",
       "verification": "public-api",
@@ -4417,9 +4369,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/25"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/25"],
       "status": "inspected",
       "timestamp": "2025-07-19T00:00:00.000Z",
       "verification": "public-api",
@@ -4594,9 +4544,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/26"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/26"],
       "status": "inspected",
       "timestamp": "2025-07-26T00:00:00.000Z",
       "verification": "public-api",
@@ -4733,9 +4681,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/27"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/27"],
       "status": "inspected",
       "timestamp": "2025-08-02T00:00:00.000Z",
       "verification": "public-api",
@@ -4910,9 +4856,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/28"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/28"],
       "status": "inspected",
       "timestamp": "2025-08-09T00:00:00.000Z",
       "verification": "public-api",
@@ -5049,9 +4993,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/29"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/29"],
       "status": "inspected",
       "timestamp": "2025-08-16T00:00:00.000Z",
       "verification": "public-api",
@@ -5226,9 +5168,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/30"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/30"],
       "status": "inspected",
       "timestamp": "2025-08-23T00:00:00.000Z",
       "verification": "public-api",
@@ -5365,9 +5305,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/31"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/31"],
       "status": "inspected",
       "timestamp": "2025-08-30T00:00:00.000Z",
       "verification": "public-api",
@@ -5542,9 +5480,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/32"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/32"],
       "status": "inspected",
       "timestamp": "2025-09-06T00:00:00.000Z",
       "verification": "public-api",
@@ -5681,9 +5617,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/33"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/33"],
       "status": "inspected",
       "timestamp": "2025-09-13T00:00:00.000Z",
       "verification": "public-api",
@@ -5858,9 +5792,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/34"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/34"],
       "status": "inspected",
       "timestamp": "2025-09-20T00:00:00.000Z",
       "verification": "public-api",
@@ -5997,9 +5929,7 @@
       "ruleVersion": "antifarming-1",
       "selfControlled": false,
       "source": "rest",
-      "sourceUrls": [
-        "https://github.com/fixture-user/project-0/pull/35"
-      ],
+      "sourceUrls": ["https://github.com/fixture-user/project-0/pull/35"],
       "status": "inspected",
       "timestamp": "2025-09-27T00:00:00.000Z",
       "verification": "public-api",
@@ -7772,10 +7702,7 @@
       "importLineThreshold": 10000,
       "importWeight": 0.1,
       "projectImportImpactCap": 20,
-      "restorationWindowsDays": [
-        7,
-        30
-      ],
+      "restorationWindowsDays": [7, 30],
       "reviewMinCharacters": 80,
       "selfControlledMultiplier": 0.25,
       "weights": {
@@ -7825,10 +7752,7 @@
       "maxTotalBytes": 1073741824
     },
     "lineSemantics": "Text diff additions/deletions against the first parent; merge transport, binary assets and excluded files receive no line credit. Renames use Git similarity detection. Weight is an average of file line-change weights; cap applies once per commit.",
-    "sources": [
-      "GitHub public REST API",
-      "public Git remotes"
-    ]
+    "sources": ["GitHub public REST API", "public Git remotes"]
   },
   "reportId": "6d29374d1009cd606a1136ec805bda9a71295a695dc854ee06b0fba325971d3f",
   "repositories": [
