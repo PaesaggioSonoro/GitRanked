@@ -1,0 +1,759 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "string",
+      "const": "gitranked-report-1"
+    },
+    "toolVersion": {
+      "type": "string",
+      "const": "1.0.0"
+    },
+    "reportId": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "subject": {
+      "type": "object",
+      "properties": {
+        "login": {
+          "type": "string"
+        },
+        "id": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "bot": {
+          "type": "boolean"
+        }
+      },
+      "required": ["login", "id", "url", "bot"],
+      "additionalProperties": false
+    },
+    "window": {
+      "type": "object",
+      "properties": {
+        "since": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "until": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+        },
+        "timezone": {
+          "type": "string",
+          "const": "UTC"
+        }
+      },
+      "required": ["since", "until", "timezone"],
+      "additionalProperties": false
+    },
+    "mode": {
+      "type": "string",
+      "enum": ["fast", "deep"]
+    },
+    "fixture": {
+      "type": "boolean"
+    },
+    "description": {
+      "type": "string"
+    },
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "scoring": {
+          "$ref": "#/$defs/__schema0"
+        },
+        "antifarming": {
+          "$ref": "#/$defs/__schema1"
+        }
+      },
+      "required": ["scoring", "antifarming"],
+      "additionalProperties": false
+    },
+    "scoring": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "displayTotal": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1000
+        },
+        "categories": {
+          "type": "object",
+          "properties": {
+            "impact": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 300
+            },
+            "consistency": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 250
+            },
+            "collaboration": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 200
+            },
+            "delivery": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 150
+            },
+            "breadth": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100
+            }
+          },
+          "required": [
+            "impact",
+            "consistency",
+            "collaboration",
+            "delivery",
+            "breadth"
+          ],
+          "additionalProperties": false
+        },
+        "metrics": {
+          "type": "object",
+          "properties": {
+            "activeDays": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "activeWeeks": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "longestStreak": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "validCommits": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "effectiveCommits": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "mergedPRs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "independentProjects": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "impactUnits": {
+              "type": "number",
+              "minimum": 0
+            },
+            "collaborationPoints": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "activeDays",
+            "activeWeeks",
+            "longestStreak",
+            "validCommits",
+            "effectiveCommits",
+            "mergedPRs",
+            "independentProjects",
+            "impactUnits",
+            "collaborationPoints"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": ["total", "displayTotal", "categories", "metrics"],
+      "additionalProperties": false
+    },
+    "coverage": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["partial", "complete-for-discovered-activity"]
+        },
+        "fullyVerified": {
+          "type": "boolean"
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "discovered": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "observed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "gitDiffInspected": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "apiOnly": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "skipped": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "analyzed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "unknownActivity": {
+          "type": "string",
+          "const": "not-quantifiable"
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "omittedChecks": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "required": [
+        "status",
+        "fullyVerified",
+        "threshold",
+        "discovered",
+        "observed",
+        "gitDiffInspected",
+        "apiOnly",
+        "skipped",
+        "analyzed",
+        "ratio",
+        "unknownActivity",
+        "checks",
+        "omittedChecks"
+      ],
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "properties": {
+        "authSource": {
+          "type": "string",
+          "enum": [
+            "environment",
+            "github-cli",
+            "anonymous",
+            "keychain",
+            "fixture"
+          ]
+        },
+        "sources": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "budgets": {
+          "type": "object",
+          "properties": {
+            "maxRepos": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxPages": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxCommits": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxRepoKb": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxRepoBytes": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxTotalBytes": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxSeconds": {
+              "type": "number",
+              "minimum": 0
+            },
+            "maxRequests": {
+              "type": "number",
+              "minimum": 0
+            }
+          },
+          "required": [
+            "maxRepos",
+            "maxPages",
+            "maxCommits",
+            "maxRepoKb",
+            "maxRepoBytes",
+            "maxTotalBytes",
+            "maxSeconds",
+            "maxRequests"
+          ],
+          "additionalProperties": false
+        },
+        "lineSemantics": {
+          "type": "string"
+        }
+      },
+      "required": ["authSource", "sources", "budgets", "lineSemantics"],
+      "additionalProperties": false
+    },
+    "repositories": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "public": {
+            "type": "boolean",
+            "const": true
+          },
+          "owner": {
+            "type": "string"
+          },
+          "defaultBranch": {
+            "type": "string"
+          },
+          "sizeKb": {
+            "type": "number",
+            "minimum": 0
+          },
+          "project": {
+            "type": "string"
+          },
+          "fork": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "enum": ["discovered", "analyzed", "skipped"]
+          },
+          "reasons": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "url",
+          "public",
+          "owner",
+          "defaultBranch",
+          "sizeKb",
+          "project",
+          "fork",
+          "status",
+          "reasons"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "activities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "commit",
+              "pr-opened",
+              "pr-merged",
+              "issue-opened",
+              "issue-closed",
+              "issue-linked",
+              "review"
+            ]
+          },
+          "repository": {
+            "type": "string"
+          },
+          "project": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time",
+            "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z))$"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["rest", "git"]
+          },
+          "verification": {
+            "type": "string",
+            "enum": ["github-author-id", "public-api", "git-diff", "unverified"]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["discovered", "inspected", "api", "skipped"]
+          },
+          "sourceUrls": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "eligible": {
+            "type": "boolean"
+          },
+          "additions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "deletions": {
+            "type": "number",
+            "minimum": 0
+          },
+          "effectiveLines": {
+            "type": "number",
+            "minimum": 0
+          },
+          "weight": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "flags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "exclusions": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ruleVersion": {
+            "type": "string",
+            "const": "antifarming-1"
+          },
+          "confidence": {
+            "type": "string",
+            "enum": ["high", "medium", "low"]
+          },
+          "sha": {
+            "type": "string"
+          },
+          "patchId": {
+            "type": "string"
+          },
+          "tree": {
+            "type": "string"
+          },
+          "parentTree": {
+            "type": "string"
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                },
+                "added": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "deleted": {
+                  "type": "number",
+                  "minimum": 0
+                },
+                "binary": {
+                  "type": "boolean"
+                },
+                "weight": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "reason": {
+                  "type": "string"
+                },
+                "before": {
+                  "type": "string"
+                },
+                "after": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "path",
+                "added",
+                "deleted",
+                "binary",
+                "weight",
+                "reason"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "authoredAt": {
+            "type": "string"
+          },
+          "committedAt": {
+            "type": "string"
+          },
+          "integrated": {
+            "type": "boolean"
+          },
+          "selfControlled": {
+            "type": "boolean"
+          },
+          "bot": {
+            "type": "boolean"
+          },
+          "body": {
+            "type": "string"
+          },
+          "points": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "repository",
+          "project",
+          "timestamp",
+          "source",
+          "verification",
+          "status",
+          "sourceUrls",
+          "eligible",
+          "additions",
+          "deletions",
+          "effectiveLines",
+          "weight",
+          "flags",
+          "exclusions",
+          "ruleVersion",
+          "confidence",
+          "selfControlled",
+          "bot",
+          "points"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "aggregates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "source": {
+            "type": "string"
+          },
+          "publicOnly": {
+            "type": "boolean",
+            "const": true
+          },
+          "data": {
+            "$ref": "#/$defs/__schema2"
+          }
+        },
+        "required": ["source", "publicOnly", "data"],
+        "additionalProperties": false
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "toolVersion",
+    "reportId",
+    "subject",
+    "window",
+    "mode",
+    "fixture",
+    "description",
+    "parameters",
+    "scoring",
+    "coverage",
+    "provenance",
+    "repositories",
+    "activities",
+    "aggregates",
+    "warnings",
+    "limitations"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema0"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema0"
+          }
+        }
+      ]
+    },
+    "__schema1": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema1"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema1"
+          }
+        }
+      ]
+    },
+    "__schema2": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/__schema2"
+          }
+        },
+        {
+          "type": "object",
+          "propertyNames": {
+            "type": "string"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/__schema2"
+          }
+        }
+      ]
+    }
+  }
+}
