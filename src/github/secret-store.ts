@@ -62,7 +62,7 @@ export class OsSecretStore implements SecretStore {
   }
   async set(token: string): Promise<void> {
     if (!tokenIsSafe(token))
-      throw new Error('OAuth returned an unsupported credential format');
+      throw new Error('GitHub returned an unsupported credential format');
     await this.available();
     try {
       if (this.platform === 'darwin')
@@ -87,7 +87,7 @@ export class OsSecretStore implements SecretStore {
       if ((await this.get()) !== token) throw new Error('verification failed');
     } catch {
       throw new Error(
-        'Unable to save OAuth credential in OS secret storage; no plaintext fallback is used',
+        'Unable to save GitHub credential in OS secret storage; no plaintext fallback is used',
       );
     }
   }
@@ -116,7 +116,7 @@ export class OsSecretStore implements SecretStore {
       )
         return;
       throw new Error(
-        'Unable to delete the GitRanked OAuth credential from OS secret storage',
+        'Unable to delete the GitRanked GitHub credential from OS secret storage',
       );
     }
   }

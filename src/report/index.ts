@@ -69,6 +69,7 @@ export const reportSchema = z.object({
       'github-cli',
       'anonymous',
       'keychain',
+      'github-app',
       'fixture',
     ]),
     sources: z.array(z.string()),

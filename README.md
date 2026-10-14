@@ -88,16 +88,19 @@ npm pack --dry-run
 
 CI runs lint, strict TypeScript checking, offline tests, and build on Node 22 and 24. Tests use mocked GitHub APIs and local adversarial Git histories. Production dependencies are Commander, Zod, and resvg WASM. No secrets or downloaded repositories belong in Git. See [CONTRIBUTING](CONTRIBUTING.md). Source is MIT licensed; the bundled font has its own [OFL license](assets/OFL.txt).
 
-## Optional login (implemented after the core)
+## Optional GitHub App login
 
 ```sh
-node dist/cli/index.js login --client-id YOUR_REAL_OAUTH_APP_CLIENT_ID
-# Alternatively set GITRANKED_CLIENT_ID, then run: gitranked login
+gitranked login
 gitranked logout
+# Contributor override:
+gitranked login --client-id YOUR_GITHUB_APP_CLIENT_ID
 ```
 
-An application owner must **manually register a GitHub OAuth App**, enable **Device Flow**, and distribute its public Client ID or configure `GITRANKED_CLIENT_ID`. No real Client ID is bundled or invented, and no Client Secret is used. Follow [GitHub's official Device Flow setup](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow). The flow requests an empty scope, sufficient for public reads; unexpected returned scopes are rejected. Do not grant private-repository scopes.
+The package bundles GitRanked's public GitHub App Client ID. End users do not register apps, configure a `.env`, or supply secrets. Device Flow opens GitHub's authorization page, displays a temporary code, and waits for consent; browser opening failures show a manual URL/code fallback. No callback server, client secret, private key, installation token, webhook, or deployment is needed. The app requests no additional scopes or optional permissions: GitHub App user tokens can implicitly read public resources. All scans remain public-only. See [GitHub's CLI guide](https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/building-a-cli-with-a-github-app).
 
-`login` prints GitHub's verification URL and temporary user code, waits for authorization, and stores the access token using **macOS Keychain** or **Linux Secret Service (`secret-tool`, often packaged as `libsecret-tools`, plus a running/unlocked secret service)**. Credentials travel to these OS tools through stdin, never command arguments or plaintext files. Unsupported systems or unavailable storage fail clearly; use environment tokens or `gh auth login` on Windows or systems without secure storage. Authentication precedence is environment, existing GitHub CLI, saved GitRanked login, anonymous. All modes remain public-only regardless of token access.
+Explicit `login` stores only the access token using **macOS Keychain** or **Linux Secret Service (`secret-tool`, often packaged as `libsecret-tools`, plus a running/unlocked secret service)**. Credentials travel to these OS tools through stdin, never command arguments or plaintext files. Unsupported systems fail clearly; use environment tokens or existing GitHub CLI authentication for explicit scans. Authentication precedence is environment, GitHub CLI, saved GitRanked login, anonymous.
 
-`logout` removes only GitRanked's locally stored OAuth token. It does not change environment variables, GitHub CLI credentials, or revoke GitHub's server-side app authorization. For full revocation, remove the OAuth App grant in [GitHub application settings](https://github.com/settings/applications). OAuth is covered by mocked tests; a real interactive login requires the manually configured Client ID and has not been performed in this rebuild.
+GitHub App access tokens normally expire after eight hours when expiration is enabled. Refresh tokens are deliberately discarded. Expired/revoked saved credentials require `gitranked login` again; they do not silently become anonymous scans. `logout` removes the local GitRanked token only. It does not change environment/GitHub CLI credentials or revoke the server-side grant. To revoke, open [Authorized GitHub Apps](https://github.com/settings/apps/authorizations) and revoke GitRanked. Token expiration and local disposal do not remove this authorization.
+
+Maintainers/contributors can override the public Client ID with `GITRANKED_CLIENT_ID` or `login --client-id`. Register a **GitHub App**, enable **Device Flow** and token expiration, leave callback/setup URLs blank, disable webhooks, leave optional permissions at No access, and allow Any account. Use the public repository as homepage. No `.env` secrets are required; never distribute a client secret or private key. See [GitHub registration documentation](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app) and [updated product requirements](docs/REQUIREMENTS.md).

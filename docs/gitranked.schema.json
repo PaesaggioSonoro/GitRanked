@@ -289,6 +289,7 @@
             "github-cli",
             "anonymous",
             "keychain",
+            "github-app",
             "fixture"
           ]
         },

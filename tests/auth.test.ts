@@ -37,7 +37,7 @@ test('auth precedence respects environment, gh, secure saved login and anonymous
     source: 'anonymous',
   });
 });
-test('device flow requests no scopes, polls pending/slow_down and never announces token', async () => {
+test('device flow requests no OAuth scopes, polls pending/slow_down and never announces token', async () => {
   const store = memory();
   let now = 0,
     n = 0;
@@ -54,7 +54,7 @@ test('device flow requests no scopes, polls pending/slow_down and never announce
     },
     { error: 'authorization_pending' },
     { error: 'slow_down' },
-    { access_token: 'oauth_token_123', scope: '' },
+    { access_token: 'ghu_token_123', scope: '' },
   ];
   await deviceLogin('configured-client', store, {
     now: () => now,
@@ -69,11 +69,11 @@ test('device flow requests no scopes, polls pending/slow_down and never announce
     },
   });
   expect(sleeps).toEqual([1000, 1000, 6000]);
-  expect(bodies[0]?.get('scope')).toBe('');
+  expect(bodies[0]?.has('scope')).toBe(false);
   expect(bodies.every((b) => !b.has('client_secret'))).toBe(true);
-  expect(messages.join()).not.toContain('oauth_token_123');
+  expect(messages.join()).not.toContain('ghu_token_123');
   expect(messages.join()).not.toContain('device-secret');
-  expect(await store.get()).toBe('oauth_token_123');
+  expect(await store.get()).toBe('ghu_token_123');
 });
 test('missing client, denial, expiration and unexpected permissions are safe failures', async () => {
   const store = memory();
@@ -121,7 +121,7 @@ test('missing client, denial, expiration and unexpected permissions are safe fai
           { status: 200 },
         ),
     }),
-  ).rejects.toThrow('permissions');
+  ).rejects.toThrow('scopes');
   expect(await store.get()).toBeUndefined();
 });
 test('OS stores send credentials via stdin and securely delete; unsupported storage has no fallback', async () => {
@@ -130,7 +130,7 @@ test('OS stores send credentials via stdin and securely delete; unsupported stor
     const calls: { args: string[]; input?: string }[] = [];
     const execute: typeof run = async (_command, args, opts = {}) => {
       calls.push({ args, ...(opts.input ? { input: opts.input } : {}) });
-      if (args.includes('-i') || args[0] === 'store') value = 'oauth_token_123';
+      if (args.includes('-i') || args[0] === 'store') value = 'ghu_token_123';
       if (args.includes('delete-generic-password') || args[0] === 'clear')
         value = undefined;
       if (args.includes('find-generic-password') || args[0] === 'lookup') {
@@ -140,9 +140,9 @@ test('OS stores send credentials via stdin and securely delete; unsupported stor
       return '';
     };
     const store = new OsSecretStore(platform, execute);
-    await store.set('oauth_token_123');
-    expect(calls.some((c) => c.input?.includes('oauth_token_123'))).toBe(true);
-    expect(calls.some((c) => c.args.join().includes('oauth_token_123'))).toBe(
+    await store.set('ghu_token_123');
+    expect(calls.some((c) => c.input?.includes('ghu_token_123'))).toBe(true);
+    expect(calls.some((c) => c.args.join().includes('ghu_token_123'))).toBe(
       false,
     );
     await store.delete();
@@ -153,4 +153,58 @@ test('OS stores send credentials via stdin and securely delete; unsupported stor
     new OsSecretStore('win32', unavailable).available(),
   ).rejects.toThrow('OS storage');
   expect(await new OsSecretStore('win32', unavailable).get()).toBeUndefined();
+});
+
+test('GitHub App session opens the browser and does not retain refresh credentials', async () => {
+  const { authorizeDevice } = await import('../src/github/device-flow.js');
+  const messages: string[] = [],
+    urls: string[] = [];
+  let n = 0;
+  const auth = await authorizeDevice('Iv23lifRY1rPYNaMNGes', {
+    sleep: async () => {},
+    announce: (message) => messages.push(message),
+    openBrowser: async (url) => {
+      urls.push(url);
+      return false;
+    },
+    fetcher: async () =>
+      new Response(
+        JSON.stringify(
+          n++ === 0
+            ? {
+                device_code: 'device-secret',
+                user_code: 'ABCD-EFGH',
+                verification_uri: 'https://github.com/login/device',
+                expires_in: 60,
+                interval: 1,
+              }
+            : {
+                access_token: 'ghu_session_123',
+                refresh_token: 'ghr_never_retain',
+                expires_in: 28800,
+                scope: '',
+              },
+        ),
+      ),
+  });
+  expect(auth).toEqual({ token: 'ghu_session_123', source: 'github-app' });
+  expect(urls).toEqual(['https://github.com/login/device']);
+  expect(messages.join()).toContain('Could not open');
+  expect(messages.join()).not.toMatch(/ghu_|ghr_|device-secret/);
+});
+
+test('device session honors cancellation and redacts upstream errors', async () => {
+  const { authorizeDevice } = await import('../src/github/device-flow.js');
+  const controller = new AbortController();
+  controller.abort();
+  await expect(
+    authorizeDevice('client', { signal: controller.signal }),
+  ).rejects.toThrow();
+  await expect(
+    authorizeDevice('client', {
+      fetcher: async () => {
+        throw new Error('upstream-secret');
+      },
+    }),
+  ).rejects.toThrow('request failed');
 });

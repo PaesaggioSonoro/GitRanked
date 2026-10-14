@@ -97,8 +97,10 @@ export class GitHubClient {
       throw new ApiError(
         response.status,
         rateLimited
-          ? 'GitHub rate limit reached; retry after reset or use GITHUB_TOKEN / gh auth login'
-          : `GitHub API request failed (${response.status})`,
+          ? 'GitHub rate limit reached; retry after reset or authorize with gitranked / use GITHUB_TOKEN'
+          : response.status === 401
+            ? 'GitHub credential expired or was revoked; run gitranked login again or scan with --anonymous'
+            : `GitHub API request failed (${response.status})`,
       );
     }
     throw new ApiError(0, 'GitHub retry budget exhausted');

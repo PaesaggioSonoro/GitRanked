@@ -33,6 +33,7 @@ export async function scan(
   const auth = await resolveAuth();
   progress(`Discovering public activity (${auth.source} authentication)`);
   const client = new GitHubClient(auth, { maxRequests: options.maxRequests });
+  if (auth.source === 'keychain') await client.request('/user');
   const discovery = normalize(await discover(username, client, options));
   progress(
     `Discovered ${discovery.repositories.length} public repositories and ${discovery.activities.length} activity records`,

@@ -2,7 +2,8 @@ import { OsSecretStore, type SecretStore } from './secret-store.js';
 import { run } from '../git/process.js';
 export interface Auth {
   token?: string;
-  source: 'environment' | 'github-cli' | 'anonymous' | 'keychain';
+  source:
+    'environment' | 'github-cli' | 'anonymous' | 'keychain' | 'github-app';
 }
 export async function resolveAuth(
   env: NodeJS.ProcessEnv = process.env,
