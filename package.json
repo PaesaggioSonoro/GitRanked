@@ -29,7 +29,7 @@
     "format": "prettier --write .",
     "dev": "tsx src/cli/index.ts",
     "prepack": "npm run build",
-    "fixture": "tsx scripts/fixture.ts"
+    "fixture": "tsx scripts/fixture.ts && prettier --write tests/fixtures/report.json"
   },
   "repository": {
     "type": "git",
