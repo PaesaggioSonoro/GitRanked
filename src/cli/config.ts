@@ -1,6 +1,10 @@
 import { resolve } from 'node:path';
 import { homedir } from 'node:os';
 
+export const isUsername = (value: unknown): value is string =>
+  typeof value === 'string' &&
+  /^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(value);
+
 export type Mode = 'fast' | 'deep';
 export interface Window {
   since: string;

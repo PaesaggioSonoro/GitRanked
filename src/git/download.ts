@@ -7,6 +7,7 @@ import { inspectCommit } from './analyzer.js';
 import { run } from './process.js';
 import { Cache } from '../cache/store.js';
 import { activitySchema } from '../report/model.js';
+import type { Progress } from '../cli/progress.js';
 export async function diskBytes(path: string): Promise<number> {
   try {
     const entries = await readdir(path, { withFileTypes: true });
@@ -24,8 +25,12 @@ export async function diskBytes(path: string): Promise<number> {
 }
 export class GitInspector {
   private readonly started = Date.now();
-  constructor(readonly options: ScanOptions) {}
+  constructor(
+    readonly options: ScanOptions,
+    readonly signal?: AbortSignal,
+  ) {}
   async checkBudget(path: string): Promise<void> {
+    this.signal?.throwIfAborted();
     if (
       (await diskBytes(path)) > this.options.maxRepoBytes ||
       (await diskBytes(join(this.options.cache, 'git'))) >
@@ -53,7 +58,11 @@ export class GitInspector {
         this.options.maxSeconds * 1000 - (Date.now() - this.started),
       ),
     );
-    const limits = { timeout, checkBudget: () => this.checkBudget(path) };
+    const limits = {
+      ...(this.signal ? { signal: this.signal } : {}),
+      timeout,
+      checkBudget: () => this.checkBudget(path),
+    };
     await this.checkBudget(path);
     let exists = false;
     try {
@@ -106,6 +115,7 @@ export class GitInspector {
   }
   async inspect(path: string, c: Activity): Promise<Activity> {
     const limits = {
+      ...(this.signal ? { signal: this.signal } : {}),
       timeout: Math.max(
         1,
         Math.min(
@@ -174,64 +184,101 @@ export function assertExternalCache(
 export async function analyzeGit(
   discovery: Discovery,
   options: ScanOptions,
+  progress: Progress = () => {},
+  signal?: AbortSignal,
 ): Promise<Discovery> {
   assertExternalCache(options.cache);
-  const inspector = new GitInspector(options);
+  const inspector = new GitInspector(options, signal);
   const activities: Activity[] = [];
   let inspected = 0;
   let attemptedRepos = 0;
-  for (const repo of discovery.repositories) {
+  let processed = 0;
+  const commitTotal = discovery.activities.filter(
+    (c) => c.kind === 'commit',
+  ).length;
+  for (const [index, repo] of discovery.repositories.entries()) {
+    signal?.throwIfAborted();
+    const emit = (completed: number, message: string) =>
+      progress({
+        stage: 'git',
+        message,
+        completed,
+        total: discovery.repositories.length,
+      });
+    emit(
+      index,
+      `${options.mode === 'fast' ? 'API only' : 'Preparing'} ${repo.name} | commits processed ${processed}/${commitTotal}`,
+    );
     const commits = discovery.activities.filter(
       (c) => c.kind === 'commit' && c.repository === repo.name,
     );
-    if (!commits.length) {
-      repo.status = 'analyzed';
-      continue;
-    }
-    if (options.mode === 'fast') {
-      repo.status = 'skipped';
-      repo.reasons.push('fast-api-only');
-      activities.push(
-        ...commits.map((c) => ({
-          ...c,
-          status: 'api' as const,
-          exclusions: ['git-diff-not-inspected'],
-          confidence: 'low' as const,
-        })),
-      );
-      continue;
-    }
     try {
-      if (++attemptedRepos > options.maxRepos)
-        throw new Error('Repository inspection budget exceeded');
-      const path = await inspector.prepare(repo);
-      repo.status = 'analyzed';
-      for (const c of commits) {
-        try {
-          if (inspected++ >= options.maxCommits)
-            throw new Error('Commit inspection budget exceeded');
-          activities.push(await inspector.inspect(path, c));
-        } catch (err) {
-          activities.push({
-            ...c,
-            status: 'skipped',
-            exclusions: [
-              err instanceof Error ? err.message : 'Git inspection unavailable',
-            ],
-          });
-          repo.reasons.push('some-commits-unavailable');
-        }
+      if (!commits.length) {
+        repo.status = 'analyzed';
+        continue;
       }
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : 'Git unavailable';
-      repo.status = 'skipped';
-      repo.reasons.push(reason);
-      activities.push(
-        ...commits.map((c) => ({
-          ...c,
-          status: 'skipped' as const,
-          exclusions: [reason],
-        })),
+      if (options.mode === 'fast') {
+        repo.status = 'skipped';
+        processed += commits.length;
+        repo.reasons.push('fast-api-only');
+        activities.push(
+          ...commits.map((c) => ({
+            ...c,
+            status: 'api' as const,
+            exclusions: ['git-diff-not-inspected'],
+            confidence: 'low' as const,
+          })),
+        );
+        continue;
+      }
+      try {
+        if (++attemptedRepos > options.maxRepos)
+          throw new Error('Repository inspection budget exceeded');
+        const path = await inspector.prepare(repo);
+        repo.status = 'analyzed';
+        for (const c of commits) {
+          signal?.throwIfAborted();
+          emit(
+            index,
+            `Inspecting ${repo.name} | commits processed ${processed}/${commitTotal}`,
+          );
+          try {
+            if (inspected++ >= options.maxCommits)
+              throw new Error('Commit inspection budget exceeded');
+            activities.push(await inspector.inspect(path, c));
+          } catch (err) {
+            activities.push({
+              ...c,
+              status: 'skipped',
+              exclusions: [
+                err instanceof Error
+                  ? err.message
+                  : 'Git inspection unavailable',
+              ],
+            });
+            repo.reasons.push('some-commits-unavailable');
+          } finally {
+            processed++;
+          }
+        }
+      } catch (err) {
+        signal?.throwIfAborted();
+        processed += commits.length;
+        const reason = err instanceof Error ? err.message : 'Git unavailable';
+        repo.status = 'skipped';
+        repo.reasons.push(reason);
+        activities.push(
+          ...commits.map((c) => ({
+            ...c,
+            status: 'skipped' as const,
+            exclusions: [reason],
+          })),
+        );
+      }
+    } finally {
+      emit(
+        index + 1,
+        `${repo.name}: ${repo.status} | commits processed ${processed}/${commitTotal}`,
       );
     }
   }

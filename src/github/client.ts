@@ -1,3 +1,4 @@
+import { setTimeout as delay } from 'node:timers/promises';
 import type { Auth } from './auth.js';
 export class ApiError extends Error {
   constructor(
@@ -8,6 +9,8 @@ export class ApiError extends Error {
   }
 }
 interface ClientOptions {
+  signal?: AbortSignal;
+  onRequest?: (count: number) => void;
   maxRequests?: number;
   timeout?: number;
   retries?: number;
@@ -27,13 +30,20 @@ export class GitHubClient {
     const fetcher = this.config.fetcher ?? fetch;
     const sleep =
       this.config.sleep ??
-      ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)));
+      ((ms: number) =>
+        delay(
+          ms,
+          undefined,
+          this.config.signal ? { signal: this.config.signal } : {},
+        ));
     for (let attempt = 0; attempt <= (this.config.retries ?? 2); attempt++) {
+      this.config.signal?.throwIfAborted();
       if (++this.requests > (this.config.maxRequests ?? 500))
         throw new ApiError(
           0,
           'GitHub request budget exhausted; increase --max-requests or retry later',
         );
+      this.config.onRequest?.(this.requests);
       let response: Response;
       try {
         response = await fetcher(`https://api.github.com${path}`, {
@@ -50,10 +60,16 @@ export class GitHubClient {
               : { 'Content-Type': 'application/json' }),
           },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
-          signal: AbortSignal.timeout(this.config.timeout ?? 15000),
+          signal: this.config.signal
+            ? AbortSignal.any([
+                this.config.signal,
+                AbortSignal.timeout(this.config.timeout ?? 15000),
+              ])
+            : AbortSignal.timeout(this.config.timeout ?? 15000),
           redirect: 'error',
         });
       } catch {
+        this.config.signal?.throwIfAborted();
         if (attempt < (this.config.retries ?? 2)) {
           await sleep(500 * 2 ** attempt);
           continue;

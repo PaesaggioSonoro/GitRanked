@@ -1,4 +1,4 @@
-import type { ScanOptions } from '../cli/config.js';
+import { isUsername, type ScanOptions } from '../cli/config.js';
 import {
   activity,
   type Activity,
@@ -14,9 +14,10 @@ export async function discover(
   username: string,
   client: GitHubClient,
   options: ScanOptions,
+  progress: (message: string) => void = () => {},
 ): Promise<Discovery> {
-  if (!/^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(username))
-    throw new Error('Invalid GitHub username');
+  if (!isUsername(username)) throw new Error('Invalid GitHub username');
+  progress(`Loading @${username}'s public profile`);
   const profile = await client.request<any>(`/users/${username}`);
   const user = {
     login: String(profile.login),
@@ -27,6 +28,7 @@ export async function discover(
   const warnings: string[] = [];
   const aggregates: Discovery['aggregates'] = [];
   const candidates = new Set<string>();
+  progress('Finding owned public repositories');
   const owned = await client.pages<any>(
     `/users/${username}/repos?type=owner&sort=pushed`,
     options.maxPages,
@@ -42,6 +44,7 @@ export async function discover(
       options.maxPages,
       true,
     );
+  progress('Searching public PRs, issues, reviews, and commits');
   const queries = [
     () => search(`type:pr author:${username} created:${since}..${until}`),
     () => search(`type:pr author:${username} merged:${since}..${until}`),
@@ -75,6 +78,7 @@ export async function discover(
     if (item.repository?.private === false)
       candidates.add(item.repository.full_name);
   if (client.auth.token) {
+    progress('Reading public contribution signals');
     // GitHub limits contributionsCollection to at most one year. Split longer windows.
     let start = new Date(options.window.since);
     while (start.getTime() <= Date.parse(options.window.until)) {
@@ -151,6 +155,7 @@ export async function discover(
   const names = [...candidates]
     .filter((n) => /^[\w.-]+\/[\w.-]+$/.test(n))
     .sort();
+  progress(`Checking visibility of ${names.length} discovered repositories`);
   const metadata = await boundedMap(
     names,
     options.concurrency,
@@ -208,6 +213,7 @@ export async function discover(
   const prItems = new Map(
     [...opened, ...merged, ...reviewed].map((i) => [i.id, i]),
   );
+  progress(`Verifying ${prItems.size} public pull requests and their reviews`);
   await boundedMap([...prItems.values()], options.concurrency, async (item) => {
     const r = byName.get(repoName(item).toLowerCase());
     if (!r) return;
@@ -280,6 +286,7 @@ export async function discover(
     }
   });
   const issueItems = new Map([...issues, ...closed].map((i) => [i.id, i]));
+  progress(`Verifying ${issueItems.size} public issue lifecycles`);
   for (const item of issueItems.values()) {
     const r = byName.get(repoName(item).toLowerCase());
     if (!r || item.user?.id !== user.id) continue;
@@ -336,6 +343,7 @@ export async function discover(
         }
     }
   }
+  progress('Resolving public commit identities and integration');
   await boundedMap(repositories, options.concurrency, async (r) => {
     const cs = await client.pages<any>(
       `/repos/${r.name}/commits?author=${username}&since=${options.window.since}&until=${options.window.until}`,

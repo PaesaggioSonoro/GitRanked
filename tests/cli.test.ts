@@ -43,3 +43,24 @@ test('labeled fixture has stable PNG snapshot and rejects altered report', async
   report.coverage.fullyVerified = false;
   expect(() => validateReport(report)).toThrow();
 });
+
+test('no-argument non-TTY invocation exits with explicit scan guidance', async () => {
+  const { execFile } = await import('node:child_process');
+  const result = await new Promise<{ code: number; stderr: string }>(
+    (resolve) => {
+      execFile(
+        process.execPath,
+        ['--import', 'tsx', 'src/cli/index.ts'],
+        (err, _out, stderr) =>
+          resolve({
+            code: typeof err?.code === 'number' ? err.code : 0,
+            stderr,
+          }),
+      );
+    },
+  );
+  expect(result.code).toBe(1);
+  expect(result.stderr).toContain('gitranked scan USERNAME --anonymous');
+  expect(await cli(['scan', '--help'])).toContain('--anonymous');
+  expect(await cli(['login', '--help'])).toContain('GitHub App Client ID');
+});

@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 export interface ProcessOptions {
+  signal?: AbortSignal;
   cwd?: string;
   input?: string;
   timeout?: number;
@@ -12,6 +13,7 @@ export function run(
   args: string[],
   options: ProcessOptions = {},
 ): Promise<string> {
+  options.signal?.throwIfAborted();
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
@@ -39,6 +41,9 @@ export function run(
         /* Process already exited. */
       }
     };
+    const abort = () => stop('Operation cancelled');
+    options.signal?.addEventListener('abort', abort, { once: true });
+    if (options.signal?.aborted) abort();
     const timer = setTimeout(
       () => stop('Process execution budget exceeded'),
       options.timeout ?? 30000,
@@ -65,6 +70,7 @@ export function run(
       failure = new Error(`${command} is unavailable`);
     });
     child.on('close', (code) => {
+      options.signal?.removeEventListener('abort', abort);
       clearTimeout(timer);
       clearInterval(budget);
       if (failure) reject(failure);

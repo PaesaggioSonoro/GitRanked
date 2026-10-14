@@ -70,6 +70,7 @@ export async function authorizeDevice(
     throw new Error(
       'GitHub returned invalid device authorization data; check GitHub App Device Flow configuration',
     );
+  const expires = now() + Math.min(device.expires_in, 1800) * 1000;
   options.announce?.(
     `Enter code ${device.user_code} at ${DEVICE_URL}. GitRanked analyzes public activity only.`,
   );
@@ -78,7 +79,6 @@ export async function authorizeDevice(
       `Could not open a browser automatically. Open ${DEVICE_URL} and enter the code above.`,
     );
   options.waiting?.();
-  const expires = now() + Math.min(device.expires_in, 1800) * 1000;
   let interval = Math.max(1, device.interval) * 1000;
   while (now() < expires) {
     options.signal?.throwIfAborted();

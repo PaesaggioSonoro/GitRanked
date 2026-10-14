@@ -4,60 +4,87 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { VERSION } from '../index.js';
 import { options } from './config.js';
-import { scan, exportReport } from './pipeline.js';
+import { exportReport } from './pipeline.js';
 import { validateReport } from '../report/index.js';
 import { deviceLogin } from '../github/device-flow.js';
 import { OsSecretStore } from '../github/secret-store.js';
 import { appClientId, REVOKE_URL } from '../github/app.js';
 import { openBrowser } from './browser.js';
+import { interactiveScan } from './interactive.js';
+import { Cancelled, withCancellation, scanWithProgress } from './workflow.js';
 const program = new Command()
   .name('gitranked')
+  .enablePositionalOptions()
   .description('An auditable index of public GitHub development activity')
   .version(VERSION);
-program
-  .command('scan')
-  .argument('<username>', 'GitHub username')
-  .description('Scan publicly verifiable activity; defaults to deep inspection')
-  .option('--mode <mode>', 'fast or deep', 'deep')
-  .option('--since <date>', 'UTC start date YYYY-MM-DD')
-  .option('--until <date>', 'UTC end date YYYY-MM-DD')
-  .option('--format <format>', 'json, svg, png or all', 'all')
-  .option('--output <dir>', 'output directory', '.gitranked')
-  .option('--cache <dir>', 'cache directory outside the current checkout')
-  .option('--max-repos <number>', 'Git repository inspection limit', '50')
-  .option('--max-pages <number>', 'pages per API listing', '10')
-  .option('--max-commits <number>', 'total Git commits inspected', '2000')
+function scanFlags(command: Command): Command {
+  return command
+    .option('--mode <mode>', 'fast or deep', 'deep')
+    .option('--since <date>', 'UTC start date YYYY-MM-DD')
+    .option('--until <date>', 'UTC end date YYYY-MM-DD')
+    .option('--format <format>', 'json, svg, png or all', 'all')
+    .option('--output <dir>', 'output directory', '.gitranked')
+    .option('--cache <dir>', 'cache directory outside the current checkout')
+    .option('--max-repos <number>', 'Git repository inspection limit', '50')
+    .option('--max-pages <number>', 'pages per API listing', '10')
+    .option('--max-commits <number>', 'total Git commits inspected', '2000')
+    .option(
+      '--max-repo-kb <number>',
+      'preliminary approximate GitHub size limit',
+      '100000',
+    )
+    .option('--max-repo-mb <number>', 'Git disk budget per repository', '256')
+    .option('--max-total-mb <number>', 'Git cache disk budget', '1024')
+    .option(
+      '--max-seconds <number>',
+      'total Git execution budget in seconds',
+      '300',
+    )
+    .option(
+      '--max-requests <number>',
+      'API request budget including retries',
+      '500',
+    )
+    .option('--concurrency <number>', 'API workers, capped at 8', '3');
+}
+scanFlags(program).action(async (raw: Record<string, string | undefined>) => {
+  await withCancellation((signal) => interactiveScan(raw, signal));
+});
+scanFlags(
+  program
+    .command('scan')
+    .argument('<username>', 'GitHub username')
+    .description(
+      'Scan publicly verifiable activity; defaults to deep inspection',
+    ),
+)
   .option(
-    '--max-repo-kb <number>',
-    'preliminary approximate GitHub size limit',
-    '100000',
+    '--anonymous',
+    'ignore environment, GitHub CLI and saved authentication',
   )
-  .option('--max-repo-mb <number>', 'Git disk budget per repository', '256')
-  .option('--max-total-mb <number>', 'Git cache disk budget', '1024')
-  .option(
-    '--max-seconds <number>',
-    'total Git execution budget in seconds',
-    '300',
-  )
-  .option(
-    '--max-requests <number>',
-    'API request budget including retries',
-    '500',
-  )
-  .option('--concurrency <number>', 'API workers, capped at 8', '3')
-  .action(async (username: string, raw: Record<string, string | undefined>) => {
-    const config = options(raw);
-    const report = await scan(username, config, (message) =>
-      process.stderr.write(`${message}\n`),
-    );
-    console.log(
-      `@${report.subject.login}: ${report.scoring.displayTotal}/1000 · ${report.coverage.status} · ${Math.floor(report.coverage.ratio * 100)}% of discovered activity analyzed\nOutput: ${config.output}`,
-    );
-    if (report.warnings.length)
-      process.stderr.write(
-        `${report.warnings.length} coverage warnings recorded in the JSON report.\n`,
+  .action(
+    async (
+      username: string,
+      raw: Record<string, string | undefined> & { anonymous?: boolean },
+    ) => {
+      const config = options(raw);
+      const report = await withCancellation((signal) =>
+        scanWithProgress(
+          username,
+          config,
+          raw.anonymous ? { source: 'anonymous' } : undefined,
+          signal,
+        ),
       );
-  });
+      console.log(
+        `@${report.subject.login}: ${report.scoring.displayTotal}/1000 · ${report.coverage.status} · ${Math.floor(report.coverage.ratio * 100)}% of discovered activity analyzed\nOutput: ${config.output}`,
+      );
+      if (report.warnings.length)
+        process.stderr.write(
+          `${report.warnings.length} coverage warnings recorded in the JSON report.\n`,
+        );
+    },
+  );
 program
   .command('render')
   .argument('<report>', 'validated gitranked JSON report')
@@ -84,10 +111,13 @@ program
     'GitHub App Client ID (or GITRANKED_CLIENT_ID; bundled by default)',
   )
   .action(async (raw: { clientId?: string }) => {
-    await deviceLogin(appClientId(raw.clientId), new OsSecretStore(), {
-      announce: (message) => console.log(message),
-      openBrowser,
-    });
+    await withCancellation((signal) =>
+      deviceLogin(appClientId(raw.clientId), new OsSecretStore(), {
+        announce: (message) => console.log(message),
+        openBrowser,
+        signal,
+      }),
+    );
     console.log(
       'GitHub login saved in OS secret storage. GITHUB_TOKEN and existing gh authentication take precedence.',
     );
@@ -104,8 +134,16 @@ program
 try {
   await program.parseAsync();
 } catch (err) {
-  console.error(
-    `GitRanked: ${err instanceof Error ? err.message : 'operation failed'}`,
-  );
-  process.exitCode = 1;
+  if (
+    err instanceof Cancelled ||
+    (err instanceof Error && err.name === 'AbortError')
+  ) {
+    console.error('GitRanked: cancelled.');
+    process.exitCode = 130;
+  } else {
+    console.error(
+      `GitRanked: ${err instanceof Error ? err.message : 'operation failed'}`,
+    );
+    process.exitCode = 1;
+  }
 }
