@@ -15,6 +15,7 @@ export function run(
   return new Promise((resolve, reject) => {
     const child = spawn(command, args, {
       cwd: options.cwd,
+      detached: process.platform !== 'win32',
       stdio: ['pipe', 'pipe', 'pipe'],
       env: {
         ...process.env,
@@ -30,7 +31,13 @@ export function run(
     let checking = false;
     const stop = (reason: string) => {
       failure ??= new Error(reason);
-      child.kill('SIGKILL');
+      try {
+        if (process.platform !== 'win32' && child.pid)
+          process.kill(-child.pid, 'SIGKILL');
+        else child.kill('SIGKILL');
+      } catch {
+        /* Process already exited. */
+      }
     };
     const timer = setTimeout(
       () => stop('Process execution budget exceeded'),
@@ -41,7 +48,7 @@ export function run(
         checking = true;
         options
           .checkBudget()
-          .catch(() => stop('Git disk budget exceeded'))
+          .catch(() => stop('Git resource budget exceeded'))
           .finally(() => {
             checking = false;
           });

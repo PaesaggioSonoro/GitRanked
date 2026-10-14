@@ -5,6 +5,8 @@ import type { ScanOptions } from '../cli/config.js';
 import type { Activity, Discovery, Repository } from '../report/model.js';
 import { inspectCommit } from './analyzer.js';
 import { run } from './process.js';
+import { Cache } from '../cache/store.js';
+import { activitySchema } from '../report/model.js';
 export async function diskBytes(path: string): Promise<number> {
   try {
     const entries = await readdir(path, { withFileTypes: true });
@@ -114,6 +116,27 @@ export class GitInspector {
       checkBudget: () => this.checkBudget(path),
     };
     await this.checkBudget(path);
+    const cache = new Cache(join(this.options.cache, 'diffs'), 30 * 86400000);
+    const key = `diff-inspector-1:${c.repository}:${c.sha}`;
+    const cached = activitySchema.safeParse(await cache.get(key));
+    if (
+      cached.success &&
+      cached.data.sha === c.sha &&
+      cached.data.repository === c.repository &&
+      cached.data.verification === 'git-diff'
+    ) {
+      const raw = cached.data;
+      return {
+        ...raw,
+        id: c.id,
+        timestamp: c.timestamp,
+        project: c.project,
+        integrated: c.integrated ?? false,
+        sourceUrls: c.sourceUrls,
+        selfControlled: c.selfControlled,
+        bot: c.bot,
+      };
+    }
     // Fetch only candidate plus parents; no full-history fallback and no checkout.
     try {
       await run('git', ['cat-file', '-e', `${c.sha}^`], {
@@ -136,6 +159,7 @@ export class GitInspector {
     }
     const result = await inspectCommit(path, c, limits);
     await this.checkBudget(path);
+    await cache.set(key, result);
     return result;
   }
 }

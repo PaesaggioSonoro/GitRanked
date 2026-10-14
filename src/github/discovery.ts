@@ -8,7 +8,7 @@ import {
 import { boundedMap, GitHubClient } from './client.js';
 const inWindow = (date: string, options: ScanOptions) =>
   Number.isFinite(Date.parse(date)) &&
-  date >= options.window.since &&
+  Date.parse(date) >= Date.parse(options.window.since) &&
   Date.parse(date) <= Date.parse(options.window.until);
 export async function discover(
   username: string,
@@ -42,20 +42,27 @@ export async function discover(
       options.maxPages,
       true,
     );
-  const [opened, merged, issues, closed, reviewed, commits] = await Promise.all(
-    [
-      search(`type:pr author:${username} created:${since}..${until}`),
-      search(`type:pr author:${username} merged:${since}..${until}`),
-      search(`type:issue author:${username} created:${since}..${until}`),
-      search(`type:issue author:${username} closed:${since}..${until}`),
-      search(`type:pr reviewed-by:${username} updated:>=${since}`),
+  const queries = [
+    () => search(`type:pr author:${username} created:${since}..${until}`),
+    () => search(`type:pr author:${username} merged:${since}..${until}`),
+    () => search(`type:issue author:${username} created:${since}..${until}`),
+    () => search(`type:issue author:${username} closed:${since}..${until}`),
+    () => search(`type:pr reviewed-by:${username} updated:>=${since}`),
+    () =>
       client.pages<any>(
         `/search/commits?q=${encodeURIComponent(`author:${username} author-date:${since}..${until} is:public`)}`,
         options.maxPages,
         true,
       ),
-    ],
-  );
+  ];
+  const [
+    opened = [],
+    merged = [],
+    issues = [],
+    closed = [],
+    reviewed = [],
+    commits = [],
+  ] = await boundedMap(queries, options.concurrency, (fn) => fn());
   const repoName = (item: any): string =>
     String(item.repository_url ?? item.url)
       .replace('https://api.github.com/repos/', '')
