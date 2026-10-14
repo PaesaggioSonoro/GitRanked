@@ -6,6 +6,8 @@ import { VERSION } from '../index.js';
 import { options } from './config.js';
 import { scan, exportReport } from './pipeline.js';
 import { validateReport } from '../report/index.js';
+import { deviceLogin } from '../github/device-flow.js';
+import { OsSecretStore } from '../github/secret-store.js';
 const program = new Command()
   .name('gitranked')
   .description('An auditable index of public GitHub development activity')
@@ -68,6 +70,34 @@ program
     await exportReport(report, config.output, config.format);
     console.log(
       `Rendered ${report.fixture ? 'fixture' : 'saved report'}: ${config.output}`,
+    );
+  });
+program
+  .command('login')
+  .description(
+    'Optionally log in with GitHub Device Flow and OS secret storage',
+  )
+  .option(
+    '--client-id <id>',
+    'GitHub OAuth App Client ID (or GITRANKED_CLIENT_ID)',
+  )
+  .action(async (raw: { clientId?: string }) => {
+    await deviceLogin(
+      raw.clientId ?? process.env.GITRANKED_CLIENT_ID,
+      new OsSecretStore(),
+      { announce: (message) => console.log(message) },
+    );
+    console.log(
+      'GitHub login saved in OS secret storage. GITHUB_TOKEN and existing gh authentication take precedence.',
+    );
+  });
+program
+  .command('logout')
+  .description('Remove the GitRanked OAuth login from OS secret storage')
+  .action(async () => {
+    await new OsSecretStore().delete();
+    console.log(
+      'GitRanked OAuth credential removed. Environment tokens and gh authentication remain available. To revoke server-side authorization, remove the app at https://github.com/settings/applications.',
     );
   });
 try {

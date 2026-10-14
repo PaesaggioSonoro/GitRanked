@@ -87,3 +87,17 @@ npm pack --dry-run
 ```
 
 CI runs lint, strict TypeScript checking, offline tests, and build on Node 22 and 24. Tests use mocked GitHub APIs and local adversarial Git histories. Production dependencies are Commander, Zod, and resvg WASM. No secrets or downloaded repositories belong in Git. See [CONTRIBUTING](CONTRIBUTING.md). Source is MIT licensed; the bundled font has its own [OFL license](assets/OFL.txt).
+
+## Optional login (implemented after the core)
+
+```sh
+node dist/cli/index.js login --client-id YOUR_REAL_OAUTH_APP_CLIENT_ID
+# Alternatively set GITRANKED_CLIENT_ID, then run: gitranked login
+gitranked logout
+```
+
+An application owner must **manually register a GitHub OAuth App**, enable **Device Flow**, and distribute its public Client ID or configure `GITRANKED_CLIENT_ID`. No real Client ID is bundled or invented, and no Client Secret is used. Follow [GitHub's official Device Flow setup](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/authorizing-oauth-apps#device-flow). The flow requests an empty scope, sufficient for public reads; unexpected returned scopes are rejected. Do not grant private-repository scopes.
+
+`login` prints GitHub's verification URL and temporary user code, waits for authorization, and stores the access token using **macOS Keychain** or **Linux Secret Service (`secret-tool`, often packaged as `libsecret-tools`, plus a running/unlocked secret service)**. Credentials travel to these OS tools through stdin, never command arguments or plaintext files. Unsupported systems or unavailable storage fail clearly; use environment tokens or `gh auth login` on Windows or systems without secure storage. Authentication precedence is environment, existing GitHub CLI, saved GitRanked login, anonymous. All modes remain public-only regardless of token access.
+
+`logout` removes only GitRanked's locally stored OAuth token. It does not change environment variables, GitHub CLI credentials, or revoke GitHub's server-side app authorization. For full revocation, remove the OAuth App grant in [GitHub application settings](https://github.com/settings/applications). OAuth is covered by mocked tests; a real interactive login requires the manually configured Client ID and has not been performed in this rebuild.
