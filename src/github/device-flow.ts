@@ -102,7 +102,10 @@ export async function authorizeDevice(
     }
     if (result.error === 'authorization_pending') continue;
     if (result.error === 'slow_down') {
-      interval += 5000;
+      interval = Math.max(
+        interval + 5000,
+        Number.isFinite(result.interval) ? result.interval * 1000 : 0,
+      );
       continue;
     }
     if (result.error === 'access_denied')

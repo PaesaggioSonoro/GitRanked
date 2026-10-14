@@ -99,3 +99,61 @@ test('expired saved access fails with reauthorization guidance before producing 
     }),
   ).rejects.toThrow('credential expired or was revoked');
 });
+
+test('deep repository progress reaches its denominator even for budget skips without cloning', async () => {
+  const dir = await mkdtemp(join(tmpdir(), 'gitranked-skip-progress-'));
+  const events: ProgressEvent[] = [];
+  const fetcher: typeof fetch = async (url, init) => {
+    const path = new URL(String(url)).pathname;
+    const repo = {
+      full_name: 'alice/project',
+      private: false,
+      html_url: 'https://github.com/alice/project',
+      owner: { login: 'alice' },
+      default_branch: 'main',
+      size: 10000,
+    };
+    if (path === '/users/alice/repos')
+      return new Response(JSON.stringify([repo]));
+    if (path === '/repos/alice/project')
+      return new Response(JSON.stringify(repo));
+    if (path === '/repos/alice/project/commits')
+      return new Response(
+        JSON.stringify([
+          {
+            sha: 'a'.repeat(40),
+            author: { id: 42 },
+            html_url: `https://github.com/alice/project/commit/${'a'.repeat(40)}`,
+            commit: {
+              author: { date: '2025-02-01T12:00:00Z' },
+              committer: { date: '2025-02-01T12:00:00Z' },
+            },
+          },
+        ]),
+      );
+    return publicApi(url, init);
+  };
+  try {
+    const report = await scan(
+      'alice',
+      options({
+        mode: 'deep',
+        maxRepoKb: '1',
+        since: '2025-01-01',
+        until: '2025-12-31',
+        output: dir,
+        format: 'json',
+      }),
+      (event) => events.push(event),
+      { auth: { source: 'anonymous' }, fetcher },
+    );
+    expect(
+      events.filter((event) => event.stage === 'git').at(-1),
+    ).toMatchObject({ completed: 1, total: 1 });
+    expect(report.coverage.skipped).toBe(1);
+    expect(report.repositories[0]?.status).toBe('skipped');
+    expect(report.coverage.fullyVerified).toBe(false);
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});

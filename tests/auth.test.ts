@@ -208,3 +208,35 @@ test('device session honors cancellation and redacts upstream errors', async () 
     }),
   ).rejects.toThrow('request failed');
 });
+
+test('device polling honors the returned slow-down interval and local code deadline', async () => {
+  const { authorizeDevice } = await import('../src/github/device-flow.js');
+  let now = 0,
+    request = 0;
+  const sleeps: number[] = [];
+  await expect(
+    authorizeDevice('client', {
+      now: () => now,
+      sleep: async (ms) => {
+        sleeps.push(ms);
+        now += ms;
+      },
+      fetcher: async () =>
+        new Response(
+          JSON.stringify(
+            request++ === 0
+              ? {
+                  device_code: 'secret',
+                  user_code: 'ABCD-EFGH',
+                  verification_uri: 'https://github.com/login/device',
+                  expires_in: 10,
+                  interval: 1,
+                }
+              : { error: 'slow_down', interval: 20 },
+          ),
+        ),
+    }),
+  ).rejects.toThrow('expired');
+  expect(sleeps).toEqual([1000, 9000]);
+  expect(request).toBe(2);
+});

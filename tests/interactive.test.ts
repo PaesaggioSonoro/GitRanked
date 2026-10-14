@@ -166,3 +166,25 @@ test('authorized identity is fetched with the session token and validated', asyn
     'invalid authorized account',
   );
 });
+
+test('failed logged scan still explains credential disposal and how to revoke authorization', async () => {
+  const terminal = ui('github');
+  await expect(
+    interactiveScan({}, new AbortController().signal, {
+      tty: true,
+      ui: terminal,
+      authorize: async () => ({
+        source: 'github-app',
+        token: 'ghu_ephemeral_123',
+      }),
+      identity: async () => 'alice',
+      performScan: async () => {
+        throw new Error('scan failed');
+      },
+    }),
+  ).rejects.toThrow('scan failed');
+  expect(terminal.message).toHaveBeenCalledWith(
+    expect.stringContaining('https://github.com/settings/apps/authorizations'),
+  );
+  expect(terminal.finish).not.toHaveBeenCalled();
+});

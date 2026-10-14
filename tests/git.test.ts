@@ -51,3 +51,14 @@ test('process timeout and output limits fail safely', async () => {
     }),
   ).rejects.toThrow('budget');
 });
+
+test('cancelling a running child terminates work and removes the abort listener', async () => {
+  const controller = new AbortController();
+  const task = run(process.execPath, ['-e', 'setTimeout(()=>{},10000)'], {
+    signal: controller.signal,
+  });
+  controller.abort();
+  await expect(task).rejects.toThrow('cancelled');
+  const { getEventListeners } = await import('node:events');
+  expect(getEventListeners(controller.signal, 'abort')).toHaveLength(0);
+});

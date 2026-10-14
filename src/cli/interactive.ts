@@ -140,6 +140,7 @@ export async function interactiveScan(
     username = (await ui.username()).trim();
     if (!isUsername(username)) throw new Error('Invalid GitHub username');
   } else {
+    let authorized = false;
     try {
       auth = await (dependencies.authorize ?? authorizeDevice)(appClientId(), {
         signal,
@@ -147,6 +148,7 @@ export async function interactiveScan(
         announce: (message) => ui.message(message),
         waiting: () => ui.waiting(),
       });
+      authorized = true;
       username = await (dependencies.identity ?? authorizedUsername)(
         auth,
         signal,
@@ -155,16 +157,29 @@ export async function interactiveScan(
       ui.message(`Scanning @${username}'s publicly verifiable activity.`);
     } catch (error) {
       ui.stopWaiting(false);
+      if (authorized)
+        ui.message(
+          `Session credentials are discarded. Revoke GitRanked at ${REVOKE_URL}.`,
+        );
       throw error;
     }
   }
   signal.throwIfAborted();
-  const report = await (dependencies.performScan ?? scanWithProgress)(
-    username,
-    config,
-    auth,
-    signal,
-  );
+  let report: Report;
+  try {
+    report = await (dependencies.performScan ?? scanWithProgress)(
+      username,
+      config,
+      auth,
+      signal,
+    );
+  } catch (error) {
+    if (choice === 'github')
+      ui.message(
+        `Session credentials are discarded. Revoke GitRanked at ${REVOKE_URL}.`,
+      );
+    throw error;
+  }
   ui.finish(report, config.output, choice === 'github');
   return report;
 }
