@@ -53,7 +53,7 @@ export function audit(discovery: Discovery, until: string): Discovery {
   for (const a of result.activities)
     a.project = projectAliases.get(a.project) ?? a.project;
   const stateHistory = new Map<string, Map<string, number>>();
-  const restorations = new Map<string, number>();
+  const restorations = new Map<string, { count: number; timestamp: number }>();
   const imports = new Map<string, number>();
   const collabDays = new Map<string, number>();
   const bodySeen = new Set<string>();
@@ -152,15 +152,8 @@ export function audit(discovery: Discovery, until: string): Discovery {
       deleted = 0,
       weighted = 0,
       raw = 0;
-    let restore = false;
     for (const f of files) {
       if (f.weight <= 0) continue;
-      const l =
-        Math.min(f.added, f.deleted) + 0.5 * Math.abs(f.added - f.deleted);
-      added += f.added;
-      deleted += f.deleted;
-      weighted += l * f.weight;
-      raw += l;
       if (f.before !== undefined && f.after !== undefined) {
         const key = `${a.project}:${f.path}`;
         const history = stateHistory.get(key) ?? new Map<string, number>();
@@ -171,27 +164,44 @@ export function audit(discovery: Discovery, until: string): Discovery {
           previous !== undefined &&
           time - previous <= 30 * 86400000
         ) {
-          restore = true;
           a.flags.push(
             time - previous <= 7 * 86400000
               ? 'file-state-restored-within-7-days'
               : 'file-state-restored-within-30-days',
           );
+          const last = restorations.get(key);
+          const count =
+            last && time - last.timestamp <= 30 * 86400000 ? last.count + 1 : 1;
+          restorations.set(key, { count, timestamp: time });
+          f.weight *= count === 1 ? RULES.firstRestorationWeight : 0;
+          f.reason +=
+            count === 1
+              ? '; first-restoration-discount'
+              : '; repeated-restoration-excluded';
+          if (count === 1)
+            a.flags.push('first-rollback-discount-maintenance-retained');
+          else a.flags.push('repeated-restoration-file-excluded');
         }
         history.set(f.after, time);
         stateHistory.set(key, history);
+      }
+      if (f.weight > 0) {
+        const l =
+          Math.min(f.added, f.deleted) + 0.5 * Math.abs(f.added - f.deleted);
+        added += f.added;
+        deleted += f.deleted;
+        weighted += l * f.weight;
+        raw += l;
       }
     }
     const lines = Math.min(added, deleted) + 0.5 * Math.abs(added - deleted);
     a.effectiveLines = lines;
     a.weight = raw > 0 ? weighted / raw : 0;
-    if (restore) {
-      const count = (restorations.get(a.project) ?? 0) + 1;
-      restorations.set(a.project, count);
-      a.weight *= count === 1 ? RULES.firstRestorationWeight : 0;
-      if (count > 1) exclude('repeated-restoration-cycle');
-      else a.flags.push('first-rollback-discount-maintenance-retained');
-    }
+    if (
+      a.flags.includes('repeated-restoration-file-excluded') &&
+      weighted === 0
+    )
+      exclude('repeated-restoration-cycle');
     if (
       a.flags.includes('initial-import') ||
       a.additions + a.deletions >= RULES.importLineThreshold

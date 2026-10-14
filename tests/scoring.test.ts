@@ -163,3 +163,45 @@ test('trivial/self reviews, bots, repetitive collaboration and caps', () => {
   expect(a.activities.reduce((n, a) => n + a.points, 0)).toBe(20);
   expect(a.activities.every((a) => a.body === undefined)).toBe(true);
 });
+
+test('unrelated rollbacks retain maintenance credit and mixed commits preserve new code', () => {
+  const file = (path: string, before: string, after: string) => ({
+    path,
+    added: 20,
+    deleted: 20,
+    binary: false,
+    weight: 1,
+    reason: 'source',
+    before,
+    after,
+  });
+  const records = [
+    make({ id: 'a1', files: [file('a.ts', 'a', 'b')] }),
+    make({
+      id: 'b1',
+      timestamp: '2025-01-02T00:00:00.000Z',
+      files: [file('b.ts', 'x', 'y')],
+    }),
+    make({
+      id: 'a2',
+      timestamp: '2025-01-03T00:00:00.000Z',
+      files: [file('a.ts', 'b', 'a')],
+    }),
+    make({
+      id: 'b2',
+      timestamp: '2025-01-04T00:00:00.000Z',
+      files: [file('b.ts', 'y', 'x')],
+    }),
+    make({
+      id: 'mixed',
+      timestamp: '2025-01-05T00:00:00.000Z',
+      files: [file('a.ts', 'a', 'b'), file('new.ts', 'old', 'new')],
+    }),
+  ];
+  const result = audit(discovery(records), '2025-12-31T23:59:59Z');
+  expect(result.activities[2]?.weight).toBe(0.5);
+  expect(result.activities[3]?.weight).toBe(0.5);
+  expect(result.activities[4]?.eligible).toBe(true);
+  expect(result.activities[4]?.files?.[0]?.weight).toBe(0);
+  expect(result.activities[4]?.effectiveLines).toBe(20);
+});
