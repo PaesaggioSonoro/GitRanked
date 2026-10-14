@@ -226,7 +226,22 @@ export function validateReport(input: unknown): Report {
     canonical({ scoring: SCORING, antifarming: RULES })
   )
     throw new Error('Unsupported scoring parameters');
-  if (canonical(report.scoring) !== canonical(score(report.activities)))
+  const computed = score(report.activities);
+  // Math.exp is implementation-approximated: V8 and JavaScriptCore can differ
+  // by a few ULPs. Keep full stored precision and verify the exact digest first.
+  const equalFloat = (stored: number, expected: number) =>
+    Math.abs(stored - expected) <=
+    Number.EPSILON * 8 * Math.max(1, Math.abs(expected));
+  if (
+    report.scoring.displayTotal !== computed.displayTotal ||
+    canonical(report.scoring.metrics) !== canonical(computed.metrics) ||
+    !equalFloat(report.scoring.total, computed.total) ||
+    !(
+      Object.keys(computed.categories) as (keyof typeof computed.categories)[]
+    ).every((key) =>
+      equalFloat(report.scoring.categories[key], computed.categories[key]),
+    )
+  )
     throw new Error('Report score does not match audited activity');
   if (
     report.activities.some(
