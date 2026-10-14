@@ -11,16 +11,35 @@ From this checkout:
 ```sh
 npm ci
 npm run build
-node dist/cli/index.js scan USERNAME
+node dist/cli/index.js
+node dist/cli/index.js scan USERNAME --anonymous
 node dist/cli/index.js scan USERNAME --mode fast --format json
 node dist/cli/index.js scan USERNAME --since 2025-01-01 --until 2025-12-31 --output .gitranked/2025
 node dist/cli/index.js --help
 node dist/cli/index.js --version
 ```
 
-Install the checkout locally with `npm install -g .` to use `gitranked scan USERNAME`. The package has not been published by this rebuild. **After npm publication**, the equivalent command will be `npx gitranked scan USERNAME` (or pin `npx gitranked@1.0.0 scan USERNAME` for reproducibility).
+Install the checkout locally with `npm install -g .`, then run **`gitranked`**. The package has not been published by this rebuild. **After npm publication**, users run just:
 
-Authentication during development is automatic: `GITHUB_TOKEN`, then an already-authenticated `gh auth token --hostname github.com`, then anonymous public requests. Tokens are never written to reports, caches, or logs. No authentication is required to start using the core.
+```sh
+npx gitranked
+# Or with Bun:
+bunx gitranked
+```
+
+The interactive terminal starts with an arrow-key choice: **Continue with GitHub** (initial selection) or **Scan anonymously**. Login opens GitHub in your browser, shows a temporary verification code to enter, and scans the authorized account automatically. Anonymous asks for a username and starts scanning immediately. Anonymous selection ignores environment tokens, GitHub CLI authentication, and saved credentials. Login offers higher API limits and additional public contribution discovery; it does not unlock private contributions or guarantee a complete history.
+
+The default wizard uses deep inspection, a trailing 365-day window, and all output formats. Pass any scan option to the wizard, for example `gitranked --mode fast --output .gitranked/quick`. Explicit commands remain available:
+
+```sh
+gitranked scan USERNAME --anonymous
+gitranked scan USERNAME --mode deep --since 2025-01-01 --until 2025-12-31
+gitranked scan USERNAME --mode fast --format json --output .gitranked/quick
+```
+
+Both scan paths display a compact live status area: discovery with API request counts, Git inspection with repository progress and commit counters, audit/scoring, and rendering/export. Repository progress counts processed items, including skips; it is separate from analysis coverage. Redirected output uses a few plain stage lines. Ctrl+C cancels prompts, device authorization, API work, and Git inspection and restores the terminal. No-argument invocation requires an interactive terminal; scripts should use explicit commands. Pin `gitranked@1.0.0` and both dates when reproducibility matters.
+
+Authentication during development is automatic: `GITHUB_TOKEN`, then an already-authenticated `gh auth token --hostname github.com`, then a saved GitRanked access token, then anonymous public requests. Tokens are never written to reports, caches, or logs. No authentication is required to start using the core.
 
 The default interval is the trailing 365 × 24 hours through scan start. `--since` starts at 00:00:00 UTC; `--until` includes the entire end date. Pin both dates to reproduce the analysis window. Public GitHub data can change, so save the JSON report to preserve the exact analyzed evidence.
 
@@ -86,9 +105,9 @@ npm run fixture
 npm pack --dry-run
 ```
 
-CI runs lint, strict TypeScript checking, offline tests, and build on Node 22 and 24. Tests use mocked GitHub APIs and local adversarial Git histories. Production dependencies are Commander, Zod, and resvg WASM. No secrets or downloaded repositories belong in Git. See [CONTRIBUTING](CONTRIBUTING.md). Source is MIT licensed; the bundled font has its own [OFL license](assets/OFL.txt).
+CI runs lint, strict TypeScript checking, offline tests, and build on Node 22 and 24. Tests use mocked GitHub APIs and local adversarial Git histories. Production dependencies are Clack prompts, Commander, Zod, and resvg WASM. No secrets or downloaded repositories belong in Git. See [CONTRIBUTING](CONTRIBUTING.md). Source is MIT licensed; the bundled font has its own [OFL license](assets/OFL.txt).
 
-## Optional GitHub App login
+## GitHub App authorization and optional saved login
 
 ```sh
 gitranked login
@@ -99,8 +118,12 @@ gitranked login --client-id YOUR_GITHUB_APP_CLIENT_ID
 
 The package bundles GitRanked's public GitHub App Client ID. End users do not register apps, configure a `.env`, or supply secrets. Device Flow opens GitHub's authorization page, displays a temporary code, and waits for consent; browser opening failures show a manual URL/code fallback. No callback server, client secret, private key, installation token, webhook, or deployment is needed. The app requests no additional scopes or optional permissions: GitHub App user tokens can implicitly read public resources. All scans remain public-only. See [GitHub's CLI guide](https://docs.github.com/en/apps/creating-github-apps/writing-code-for-a-github-app/building-a-cli-with-a-github-app).
 
+The default interactive GitHub path holds its access token only in memory for this run, never saves it to disk/keychain, and discards any refresh token. It works without OS secret storage on macOS, Linux, and Windows. After the scan it displays a direct link to revoke GitRanked. Closing the process or discarding a token does **not** revoke the GitHub authorization.
+
 Explicit `login` stores only the access token using **macOS Keychain** or **Linux Secret Service (`secret-tool`, often packaged as `libsecret-tools`, plus a running/unlocked secret service)**. Credentials travel to these OS tools through stdin, never command arguments or plaintext files. Unsupported systems fail clearly; use environment tokens or existing GitHub CLI authentication for explicit scans. Authentication precedence is environment, GitHub CLI, saved GitRanked login, anonymous.
 
 GitHub App access tokens normally expire after eight hours when expiration is enabled. Refresh tokens are deliberately discarded. Expired/revoked saved credentials require `gitranked login` again; they do not silently become anonymous scans. `logout` removes the local GitRanked token only. It does not change environment/GitHub CLI credentials or revoke the server-side grant. To revoke, open [Authorized GitHub Apps](https://github.com/settings/apps/authorizations) and revoke GitRanked. Token expiration and local disposal do not remove this authorization.
 
 Maintainers/contributors can override the public Client ID with `GITRANKED_CLIENT_ID` or `login --client-id`. Register a **GitHub App**, enable **Device Flow** and token expiration, leave callback/setup URLs blank, disable webhooks, leave optional permissions at No access, and allow Any account. Use the public repository as homepage. No `.env` secrets are required; never distribute a client secret or private key. See [GitHub registration documentation](https://docs.github.com/en/apps/creating-github-apps/registering-a-github-app/registering-a-github-app) and [updated product requirements](docs/REQUIREMENTS.md).
+
+The provided Client ID was checked against GitHub's device-code endpoint and Device Flow is enabled. Full account authorization and a live authenticated scan still require consent in your browser; tests exercise those paths with mocked APIs. No account token was obtained during that configuration check.
