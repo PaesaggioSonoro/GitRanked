@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { fixture } from './report.test.js';
+import { fixture } from './helpers.js';
 import { svg, png } from '../src/render/index.js';
 test('offline SVG/PNG render with bundled font, escape XML and remain deterministic', async () => {
   const r = fixture();

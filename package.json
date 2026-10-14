@@ -28,7 +28,8 @@
     "lint": "eslint . && prettier --check .",
     "format": "prettier --write .",
     "dev": "tsx src/cli/index.ts",
-    "prepack": "npm run build"
+    "prepack": "npm run build",
+    "fixture": "tsx scripts/fixture.ts"
   },
   "repository": {
     "type": "git",

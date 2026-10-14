@@ -148,17 +148,10 @@ test('mock discovery finds third-party lifecycle evidence and excludes private o
   expect(d.activities.some((a) => a.kind === 'issue-linked')).toBe(true);
   expect(d.activities.some((a) => a.sha === 'b'.repeat(40))).toBe(false);
   expect(d.aggregates.some((a) => a.source.includes('calendar'))).toBe(false);
-  const reviewed = audit(
-    {
-      ...d,
-      activities: d.activities.map((a) =>
-        a.kind === 'commit'
-          ? { ...a, status: 'api' }
-          : { ...a, status: 'inspected' },
-      ),
-    },
-    '2025-12-31T23:59:59.999Z',
-  );
+  const reviewed = audit(d, '2025-12-31T23:59:59.999Z');
+  expect(
+    reviewed.activities.find((a) => a.kind === 'pr-merged')?.eligible,
+  ).toBe(true);
   expect(reviewed.activities.find((a) => a.kind === 'review')?.eligible).toBe(
     false,
   );

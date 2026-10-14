@@ -61,7 +61,8 @@ export function audit(discovery: Discovery, until: string): Discovery {
       exclude('bot-activity');
       continue;
     }
-    if (a.status === 'skipped' || a.status === 'discovered') continue;
+    if (a.status === 'skipped') continue;
+    if (a.kind === 'commit' && a.status === 'discovered') continue;
     if (a.kind !== 'commit') {
       a.status = 'inspected';
       if (
