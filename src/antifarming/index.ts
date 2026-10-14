@@ -2,6 +2,14 @@ import { createHash } from 'node:crypto';
 import type { Activity, Discovery } from '../report/model.js';
 export const RULE_VERSION = 'antifarming-1';
 export const RULES = {
+  weights: {
+    substantive: 1,
+    documentation: 0.7,
+    configuration: 0.5,
+    dependency: 0.15,
+    format: 0.1,
+    excluded: 0,
+  },
   commitLineCap: 200,
   dailyImpactCap: 300,
   importLineThreshold: 10000,

@@ -1,3 +1,4 @@
+import { RULES } from '../antifarming/index.js';
 import { run, type ProcessOptions } from './process.js';
 import type { Activity } from '../report/model.js';
 export type FileChange = NonNullable<Activity['files']>[number];
@@ -6,15 +7,22 @@ export function classify(
   content: string,
   binary = false,
 ): { weight: number; reason: string } {
-  if (binary) return { weight: 0, reason: 'binary-or-non-code-asset' };
+  if (binary)
+    return {
+      weight: RULES.weights.excluded,
+      reason: 'binary-or-non-code-asset',
+    };
   if (
     /(^|\/)(vendor|node_modules|dist|build|coverage|generated|\.next)(\/|$)|\.(min\.(js|css)|map|snap)$|(^|\/)package-lock\.json$/.test(
       path.toLowerCase(),
     )
   ) {
     if (/(^|\/)(package-lock\.json)$/.test(path))
-      return { weight: 0.15, reason: 'dependency-lockfile' };
-    return { weight: 0, reason: 'generated-vendor-build' };
+      return {
+        weight: RULES.weights.dependency,
+        reason: 'dependency-lockfile',
+      };
+    return { weight: RULES.weights.excluded, reason: 'generated-vendor-build' };
   }
   if (
     /@generated|automatically generated|do not edit|code generated/i.test(
@@ -22,34 +30,52 @@ export function classify(
     ) ||
     content.split('\n').some((l) => l.length > 1000)
   )
-    return { weight: 0, reason: 'generated-or-minified-content-heuristic' };
+    return {
+      weight: RULES.weights.excluded,
+      reason: 'generated-or-minified-content-heuristic',
+    };
   if (
     /(^|\/)(yarn\.lock|pnpm-lock\.yaml|Cargo\.lock|poetry\.lock|Gemfile\.lock|go\.sum|bun\.lockb?)$|(^|\/)(package\.json|Cargo\.toml|requirements\.txt)$/.test(
       path,
     )
   )
-    return { weight: 0.15, reason: 'dependency-manifest-or-lockfile' };
+    return {
+      weight: RULES.weights.dependency,
+      reason: 'dependency-manifest-or-lockfile',
+    };
   if (/\.(md|mdx|rst|adoc)$|(^|\/)(docs|documentation)(\/|$)/i.test(path))
-    return { weight: 0.7, reason: 'technical-documentation-heuristic' };
+    return {
+      weight: RULES.weights.documentation,
+      reason: 'technical-documentation-heuristic',
+    };
   if (
     /(^|\/)(\.github|\.gitlab)(\/|$)|(^|\/)(Dockerfile|Makefile)|\.(json|ya?ml|toml|ini|cfg)$/.test(
       path,
     )
   )
-    return { weight: 0.5, reason: 'ci-configuration-heuristic' };
+    return {
+      weight: RULES.weights.configuration,
+      reason: 'ci-configuration-heuristic',
+    };
   if (
     /\.(png|jpe?g|svg|gif|webp|ico|pdf|csv|mp[34]|wav|ttf|woff2?|zip)$/i.test(
       path,
     )
   )
-    return { weight: 0, reason: 'non-code-asset' };
+    return { weight: RULES.weights.excluded, reason: 'non-code-asset' };
   if (
     /\.(ts|tsx|js|jsx|py|rs|go|c|cpp|h|hpp|java|kt|swift|rb|php|cs|sh|sql|vue|svelte|css|scss|html|ex|exs|hs|lua|r|dart)$/i.test(
       path,
     )
   )
-    return { weight: 1, reason: 'source-tests-heuristic' };
-  return { weight: 0.5, reason: 'unclassified-text-conservative' };
+    return {
+      weight: RULES.weights.substantive,
+      reason: 'source-tests-heuristic',
+    };
+  return {
+    weight: RULES.weights.configuration,
+    reason: 'unclassified-text-conservative',
+  };
 }
 function numstat(
   text: string,
@@ -147,7 +173,10 @@ export async function inspectCommit(
       !substantive.has(stat.path) &&
       classification.weight > 0
     )
-      classification = { weight: 0.1, reason: 'format-whitespace-only' };
+      classification = {
+        weight: RULES.weights.format,
+        reason: 'format-whitespace-only',
+      };
     files.push({ ...stat, ...classification });
   }
   // Tree entries detect file restoration cycles without storing source contents.

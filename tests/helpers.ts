@@ -1,9 +1,5 @@
 import { options } from '../src/cli/config.js';
-import {
-  makeReport,
-  serializeReport,
-  validateReport,
-} from '../src/report/index.js';
+import { makeReport } from '../src/report/index.js';
 import { activity, type Discovery } from '../src/report/model.js';
 export function fixture(): ReturnType<typeof makeReport> {
   const d: Discovery = {

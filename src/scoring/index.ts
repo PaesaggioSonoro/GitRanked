@@ -9,6 +9,7 @@ export const SCORING = {
     delivery: 150,
     breadth: 100,
   },
+  consistencyMaxima: { activeDays: 130, activeWeeks: 80, streak: 40 },
   impactScale: 5000,
   activeDaysScale: 100,
   activeWeeksCap: 52,
@@ -89,14 +90,21 @@ export function score(activities: Activity[]) {
   ).length;
   const R = streak(days);
   const categories = {
-    impact: 300 * (1 - Math.exp(-I / 5000)),
+    impact: SCORING.maxima.impact * (1 - Math.exp(-I / SCORING.impactScale)),
     consistency:
-      130 * (1 - Math.exp(-days.length / 100)) +
-      (80 * Math.min(weeks.size, 52)) / 52 +
-      40 * (1 - Math.exp(-R / 14)),
-    collaboration: 200 * (1 - Math.exp(-C / 150)),
-    delivery: 150 * (1 - Math.exp(-E / 150)),
-    breadth: 100 * (1 - Math.exp(-P / 5)),
+      SCORING.consistencyMaxima.activeDays *
+        (1 - Math.exp(-days.length / SCORING.activeDaysScale)) +
+      (SCORING.consistencyMaxima.activeWeeks *
+        Math.min(weeks.size, SCORING.activeWeeksCap)) /
+        SCORING.activeWeeksCap +
+      SCORING.consistencyMaxima.streak *
+        (1 - Math.exp(-R / SCORING.streakScale)),
+    collaboration:
+      SCORING.maxima.collaboration *
+      (1 - Math.exp(-C / SCORING.collaborationScale)),
+    delivery:
+      SCORING.maxima.delivery * (1 - Math.exp(-E / SCORING.deliveryScale)),
+    breadth: SCORING.maxima.breadth * (1 - Math.exp(-P / SCORING.breadthScale)),
   };
   for (const k of Object.keys(categories) as (keyof typeof categories)[])
     categories[k] = Math.max(0, Math.min(SCORING.maxima[k], categories[k]));

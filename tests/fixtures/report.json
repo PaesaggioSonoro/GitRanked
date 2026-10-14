@@ -7777,13 +7777,26 @@
         30
       ],
       "reviewMinCharacters": 80,
-      "selfControlledMultiplier": 0.25
+      "selfControlledMultiplier": 0.25,
+      "weights": {
+        "configuration": 0.5,
+        "dependency": 0.15,
+        "documentation": 0.7,
+        "excluded": 0,
+        "format": 0.1,
+        "substantive": 1
+      }
     },
     "scoring": {
       "activeDaysScale": 100,
       "activeWeeksCap": 52,
       "breadthScale": 5,
       "collaborationScale": 150,
+      "consistencyMaxima": {
+        "activeDays": 130,
+        "activeWeeks": 80,
+        "streak": 40
+      },
       "coverageThreshold": 0.9,
       "dailyDeliveryCap": 5,
       "deliveryScale": 150,
@@ -7817,7 +7830,7 @@
       "public Git remotes"
     ]
   },
-  "reportId": "10c21a4ada7e05f4038c728bdd53c3770d92e873e55a92650550d1d16acdfbb3",
+  "reportId": "6d29374d1009cd606a1136ec805bda9a71295a695dc854ee06b0fba325971d3f",
   "repositories": [
     {
       "defaultBranch": "main",
